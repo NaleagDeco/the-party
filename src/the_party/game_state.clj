@@ -2,6 +2,9 @@
   (:require [clojure.java.io :as io])
   (:require [the-party.builders :as builder]))
 
+(defn inaccessible? [tile]
+  (not-any? #(= tile %) '(:empty-space :passage :open-door)))
+
 (defn create [player]
   (let [terrain (builder/file->terrain (io/resource "map.txt"))
         player-coords (first (rand-nth
@@ -13,8 +16,12 @@
      :status "Welcome to The Party!"}))
 
 (defn move-player [state offset]
-  (let [old-coords (state :player-coords)
-        new-coords (map #(reduce + %) (map vector old-coords offset))]
+  (let [terrain (state :terrain)
+        old-coords (state :player-coords)
+        tentative-coords (map #(reduce + %) (map vector old-coords offset))
+        tentative-tile (terrain tentative-coords)
+        new-coords (if (inaccessible? tentative-tile)
+                     old-coords tentative-coords)]
     (assoc state :player-coords new-coords)))
 
 (defn process-input [state input]
