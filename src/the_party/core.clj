@@ -27,32 +27,33 @@
 ;;;; VIEW
 (defn render-tile [tile]
   (case tile
-    :vertical-wall \|
-    :horizontal-wall \-
-    :open-door \+
-    :passage \#
-    :empty-space \.
-    :inaccessible \space))
+    :vertical-wall "|"
+    :horizontal-wall "-"
+    :open-door "+"
+    :passage "#"
+    :empty-space "."
+    :inaccessible " "))
 
 (defn render-player [term state]
   (let [coords (state :player-coords)]
     ; lanterna uses x y coords but we use row column
-    (t/put-character term \@ (second coords) (first coords))))
+    (s/put-string term (second coords) (first coords) "@")))
 
 (defn render [term state]
-  (t/clear term)
+  (s/clear term)
   (doseq [tile (seq (state :terrain))]
-    (t/put-character term (render-tile (second tile))
-                     (second (first tile)) (first (first tile))))
-  (render-player term state))
+    (s/put-string term (second (first tile)) (first (first tile))
+                  (render-tile (second tile))))
+  (render-player term state)
+  (s/redraw term))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (let [term (t/get-terminal)]
-    (t/in-terminal term
+  (let [screen (s/get-screen)]
+    (s/in-screen screen
                    (loop [key nil]
                      (if (= key \q) "Goodbye!"
                          (do
-                           (render term @game-state)
-                           (recur (process-input! (t/get-key-blocking term)))))))))
+                           (render screen @game-state)
+                           (recur (process-input! (s/get-key-blocking screen)))))))))
