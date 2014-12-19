@@ -3,10 +3,14 @@
   (:require [the-party.builders :as builder]))
 
 (defn create [player]
-  { :player player
-   :terrain (builder/file->terrain (io/resource "map.txt"))
-   :player-coords [0 0]
-   :status "Welcome to The Party!" })
+  (let [terrain (builder/file->terrain (io/resource "map.txt"))
+        player-coords (first (rand-nth
+                              (filter #(= (second %) :empty-space)
+                                      terrain)))]
+    {:player player
+     :terrain terrain
+     :player-coords player-coords
+     :status "Welcome to The Party!"}))
 
 (defn move-player [state offset]
   (let [old-coords (state :player-coords)
