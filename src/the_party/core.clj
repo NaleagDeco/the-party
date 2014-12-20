@@ -1,4 +1,5 @@
 (ns the-party.core
+  (:require [clojure.core.async :as async :refer [<! >!]])
   (:require [the-party.game-state :as gs])
   (:require [lanterna.screen :as s])
   (:require [lanterna.terminal :as t])
@@ -50,10 +51,13 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (let [screen (s/get-screen)]
+  (let [screen (s/get-screen)
+        ui-chan (async/chan (async/sliding-buffer 10))]
+    (r/subscribe game-state ui-chan)
     (s/in-screen screen
-                   (loop [key nil]
-                     (if (= key \q) "Goodbye!"
-                         (do
-                           (render screen @game-state)
-                           (recur (process-input! (s/get-key-blocking screen)))))))))
+                 (async/go-loop [game-state (<! ui-chan)]
+                   (render screen game-state)
+                   (recur (<! ui-chan)))
+                 (loop [key nil]
+                   (if (= \q key) "Goodbye!"
+                       (recur (process-input! (s/get-key-blocking screen))))))))
