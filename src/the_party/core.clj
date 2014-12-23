@@ -1,6 +1,8 @@
 (ns the-party.core
+  (:require [clojure.pprint :refer [cl-format]])
   (:require [clojure.core.async :as async :refer [<! >!]])
   (:require [the-party.game-state :as gs])
+  (:require [the-party.player :as p])
   (:require [lanterna.screen :as s])
   (:require [lanterna.terminal :as t])
   (:require [reagi.core :as r])
@@ -23,7 +25,7 @@
 
 ;;;; UPDATE
 (def game-state
-  (r/reduce gs/process-input (gs/create "Hello") input))
+  (r/reduce gs/process-input (gs/create (p/human)) input))
 
 ;;;; VIEW
 (defn render-tile [tile]
@@ -40,12 +42,25 @@
     ; lanterna uses x y coords but we use row column
     (s/put-string term (second coords) (first coords) "@")))
 
+(defn format-stats [player]
+  (cl-format nil "Conf: ~A Awk: ~A Stm: ~A"
+             (player :confidence)
+             (player :awkwardness)
+             (player :stamina)))
+
+(defn render-status [term state]
+  (let [player (state :player)
+        msg (state :status)]
+    (s/put-string term 0 23 (format-stats player))
+    (s/put-string term 0 24 msg)))
+
 (defn render [term state]
   (s/clear term)
   (doseq [tile (seq (state :terrain))]
     (s/put-string term (second (first tile)) (first (first tile))
                   (render-tile (second tile))))
   (render-player term state)
+  (render-status term state)
   (s/redraw term))
 
 (defn -main
@@ -60,4 +75,5 @@
                    (recur (<! ui-chan)))
                  (loop [key nil]
                    (if (= \q key) "Goodbye!"
-                       (recur (process-input! (s/get-key-blocking screen))))))))
+                       (recur (process-input!
+                               (s/get-key-blocking screen))))))))
