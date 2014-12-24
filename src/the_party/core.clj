@@ -2,7 +2,7 @@
   (:require [clojure.pprint :refer [cl-format]])
   (:require [clojure.core.async :as async :refer [<! >!]])
   (:require [the-party.game-state :as gs])
-  (:require [the-party.player :as p])
+  (:require [the-party.attendees :as p])
   (:require [lanterna.screen :as s])
   (:require [lanterna.terminal :as t])
   (:require [reagi.core :as r])
@@ -38,9 +38,14 @@
     :inaccessible " "))
 
 (defn render-player [term state]
-  (let [coords (state :player-coords)]
+  (let [[r c] (state :player-coords)]
     ; lanterna uses x y coords but we use row column
-    (s/put-string term (second coords) (first coords) "@")))
+    (s/put-string term c r "@")))
+
+(defn render-people [term state]
+  (let [people (state :people)]
+    (doseq [[[r c] person] people]
+      (s/put-string term c r "b"))))
 
 (defn format-stats [player]
   (cl-format nil "Conf: ~A Awk: ~A Stm: ~A"
@@ -60,6 +65,7 @@
     (s/put-string term (second (first tile)) (first (first tile))
                   (render-tile (second tile))))
   (render-player term state)
+  (render-people term state)
   (render-status term state)
   (s/redraw term))
 

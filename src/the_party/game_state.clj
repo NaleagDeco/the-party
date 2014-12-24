@@ -7,11 +7,10 @@
 
 (defn create [player]
   (let [terrain (builder/file->terrain (io/resource "map.txt"))
-        player-coords (first (rand-nth
-                              (filter #(= (second %) :empty-space)
-                                      terrain)))]
+        player-coords (-> terrain builder/empty rand-nth)]
     {:player player
      :terrain terrain
+     :people (builder/generate-people terrain 20)
      :player-coords player-coords
      :status "Welcome to The Party!"}))
 
