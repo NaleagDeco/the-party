@@ -2,6 +2,11 @@
   (:require [clojure.java.io :as io])
   (:require [the-party.builders :as builder]))
 
+(def directions
+  [[-1, -1], [-1, 0], [-1, 1],
+   [0, -1], [0, 0], [0, 1],
+   [1, -1], [1, 0], [1, 1]])
+
 (defn inaccessible? [tile]
   (not-any? #(= tile %) '(:empty-space :passage :open-door)))
 
@@ -14,14 +19,26 @@
      :player-coords player-coords
      :status "Welcome to The Party!"}))
 
+(defn guest-action [state guest]
+  (let [terrain (state :terrain)
+        [old-coords entity] guest
+        tentative-coords (map + (rand-nth directions) old-coords)
+        new-coords (if (inaccessible? (terrain tentative-coords))
+                     old-coords
+                     tentative-coords)]
+    [new-coords entity]))
+
 (defn move-player [state offset]
   (let [terrain (state :terrain)
         old-coords (state :player-coords)
-        tentative-coords (map #(reduce + %) (map vector old-coords offset))
+        tentative-coords (map + old-coords offset)
         tentative-tile (terrain tentative-coords)
         new-coords (if (inaccessible? tentative-tile)
-                     old-coords tentative-coords)]
-    (assoc state :player-coords new-coords)))
+                     old-coords
+                     tentative-coords)]
+    (assoc state
+           :player-coords new-coords
+           :people (map #(guest-action state %) (state :people)))))
 
 (defn process-input [state input]
   (case input
