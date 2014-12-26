@@ -1,4 +1,4 @@
-(ns the-party.attendees)
+(ns the-party.people)
 
 (defn human []
   {:confidence 20

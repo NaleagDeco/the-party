@@ -2,9 +2,8 @@
   (:require [clojure.pprint :refer [cl-format]])
   (:require [clojure.core.async :as async :refer [<! >!]])
   (:require [the-party.game-state :as gs])
-  (:require [the-party.attendees :as p])
+  (:require [the-party.people :as p])
   (:require [lanterna.screen :as s])
-  (:require [lanterna.terminal :as t])
   (:require [reagi.core :as r])
   (:gen-class))
 

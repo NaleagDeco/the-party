@@ -1,6 +1,6 @@
 (ns the-party.builders
   (:require [clojure.java.io :as io])
-  (:require [the-party.attendees :as people]))
+  (:require [the-party.people :as people]))
 
 (defn char->tile [char]
   (case char
