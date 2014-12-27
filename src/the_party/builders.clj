@@ -30,4 +30,4 @@
 
 (defn generate-people [terrain num]
   (let [selections  (->> terrain empty shuffle (take num))]
-    (map vector selections (repeatedly #(people/bro)))))
+    (zipmap selections (repeatedly #(people/bro)))))

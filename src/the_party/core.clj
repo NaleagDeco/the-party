@@ -50,7 +50,7 @@
   (let [player (state :player)]
     (cl-format nil "Confidence: ~A Composure: ~A Stamina: ~A Turns: ~A"
                (player :confidence)
-               (player :awkwardness)
+               (player :composure)
                (player :stamina)
                (state :turns))))
 
