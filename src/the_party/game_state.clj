@@ -17,7 +17,8 @@
      :terrain terrain
      :people (builder/generate-people terrain 20)
      :player-coords player-coords
-     :status "Welcome to The Party!"}))
+     :status "Welcome to The Party!"
+     :turns 0}))
 
 (defn guest-action [state guest]
   (let [terrain (state :terrain)
@@ -30,15 +31,15 @@
 
 (defn move-player [state offset]
   (let [terrain (state :terrain)
-        old-coords (state :player-coords)
-        tentative-coords (map + old-coords offset)
-        tentative-tile (terrain tentative-coords)
-        new-coords (if (inaccessible? tentative-tile)
-                     old-coords
-                     tentative-coords)]
-    (assoc state
-           :player-coords new-coords
-           :people (map #(guest-action state %) (state :people)))))
+        new-coords (map + (state :player-coords) offset)
+        blocked (-> new-coords terrain inaccessible?)]
+    (if blocked
+      (assoc state :status "You bump your nose into a wall.")
+      (assoc state
+             :player-coords new-coords
+             :people (map #(guest-action state %) (state :people))
+             :status ""
+             :turns (-> :turns state inc)))))
 
 (defn process-input [state input]
   (case input
