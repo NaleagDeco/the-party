@@ -37,16 +37,28 @@
                      tentative-coords)]
     (assoc accum new-coords guest)))
 
+(defn guest-actions [state]
+  (assoc state :people (reduce-kv (partial guest-action state) {} (state :people))))
+
+(defn turn-tick [state]
+  (assoc state :turns (-> :turns state inc)))
+
+(defn status-msg [state msg]
+  (assoc state :status msg))
+
+(defn move-to [state new-coords]
+  (assoc state :player-coords new-coords))
+
 (defn player-move [state new-coords]
   (let [terrain (state :terrain)
         blocked (-> new-coords terrain inaccessible?)]
     (if blocked
-      (assoc state :status "You bump your nose into a wall.")
-      (assoc state
-             :player-coords new-coords
-             :people (reduce-kv (partial guest-action state) {} (state :people))
-             :status ""
-             :turns (-> :turns state inc)))))
+      (status-msg state "You bump your nose into a wall.")
+      (-> state
+        (move-to new-coords)
+        guest-actions
+        (status-msg "")
+        turn-tick))))
 
 (defn converse [belligerent target]
   (let [t-comp (target :composure)
@@ -60,11 +72,11 @@
 
 (defn player-converse [state target-coords]
   (let [guests (state :people)
-        moving-guests (dissoc guests target-coords)
+        other-guests (dissoc guests target-coords)
         target (converse (state :player) (guests target-coords))]
     (assoc state :people (if (>= (target :stamina) 0)
-                           (assoc moving-guests target-coords target)
-                           moving-guests))))
+                           (assoc other-guests target-coords target)
+                           other-guests))))
 
 (defn player-action [state offset]
   (let [new-coords (map + (state :player-coords) offset)
