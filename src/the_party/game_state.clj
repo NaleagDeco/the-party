@@ -28,17 +28,34 @@
 (defn neighbourhood [coord]
   (map (partial map + coord) directions))
 
-(defn guest-action [state accum old-coords guest]
+(defn guest-move [state other-guests accum old-coords guest]
   (let [terrain (state :terrain)
         tentative-coords (map + (rand-nth directions) old-coords)
         new-coords (if (or (inaccessible? (terrain tentative-coords))
-                           (contains? (state :people) tentative-coords))
+                           (contains? other-guests tentative-coords)
+                           (contains? accum tentative-coords))
                      old-coords
                      tentative-coords)]
-    (assoc accum new-coords guest)))
+    [new-coords guest]))
+
+(defn guest-converse [state other-guests accum coords guest]
+  [coords guest])
+
+(defn guest-action [state other-guests accum coords guest]
+  (let [near-player (some #{(state :player-coords)} (neighbourhood coords))]
+    (if near-player
+      (guest-converse state other-guests accum coords guest)
+      (guest-move state other-guests accum coords guest))))
 
 (defn guest-actions [state]
-  (assoc state :people (reduce-kv (partial guest-action state) {} (state :people))))
+  (loop [guests (state :people)
+         accum {}]
+    (if (empty? guests)
+      (assoc state :people accum)
+      (let [[old-coords guest] (first guests)
+            other-guests (dissoc guests old-coords)
+            [new-coords new-guest] (guest-action state guests accum old-coords guest)]
+        (recur other-guests (assoc accum new-coords new-guest))))))
 
 (defn turn-tick [state]
   (assoc state :turns (-> :turns state inc)))
@@ -73,10 +90,15 @@
 (defn player-converse [state target-coords]
   (let [guests (state :people)
         other-guests (dissoc guests target-coords)
-        target (converse (state :player) (guests target-coords))]
-    (assoc state :people (if (>= (target :stamina) 0)
-                           (assoc other-guests target-coords target)
-                           other-guests))))
+        target (converse (state :player) (guests target-coords))
+        new-guests (if (>= (target :stamina) 0)
+                     (assoc other-guests target-coords target)
+                     other-guests)
+        msg (if (>= (target :stamina) 0) "You talk about stuff." "The converation peters out.")]
+    (-> (assoc state :people new-guests)
+      guest-actions
+      (status-msg msg)
+      turn-tick)))
 
 (defn player-action [state offset]
   (let [new-coords (map + (state :player-coords) offset)
