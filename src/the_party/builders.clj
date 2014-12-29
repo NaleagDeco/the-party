@@ -1,4 +1,5 @@
 (ns the-party.builders
+  (:refer-clojure :exclude [empty])
   (:require [clojure.java.io :as io])
   (:require [the-party.people :as people]))
 
