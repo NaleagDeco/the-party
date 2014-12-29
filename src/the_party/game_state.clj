@@ -76,8 +76,11 @@
 (defn turn-tick [state]
   (assoc state :turns (-> :turns state inc)))
 
-(defn status-msg [state msg]
-  (assoc state :status msg))
+(defn clear-status [state]
+  (assoc state :status []))
+
+(defn append-status [state msg]
+  (assoc state :status (conj (state :status) msg)))
 
 (defn move-to [state new-coords]
   (assoc state :player-coords new-coords))
@@ -86,11 +89,10 @@
   (let [terrain (state :terrain)
         blocked (-> new-coords terrain inaccessible?)]
     (if blocked
-      (status-msg state "You bump your nose into a wall.")
+      (append-status state "You bump your nose into a wall.")
       (-> state
         guest-actions
         (move-to new-coords)
-        (status-msg "")
         turn-tick))))
 
 (defn player-converse [state target-coords]
@@ -103,7 +105,7 @@
         msg (if (>= (target :stamina) 0) "You talk about stuff." "The conversation peters out.")]
     (-> (assoc state :people new-guests)
       guest-actions
-      (status-msg msg)
+      (append-status msg)
       turn-tick)))
 
 (defn player-action [state offset]
@@ -114,9 +116,10 @@
       (player-move state new-coords))))
 
 (defn process-input [state input]
-  (case input
-    :player-left (player-action state [0 -1])
-    :player-right (player-action state [0 1])
-    :player-up (player-action state [-1 0])
-    :player-down (player-action state [1 0])
-    :player-wait (player-action state [0 0])))
+  (let [next-state (clear-status state)]
+    (case input
+      :player-left (player-action next-state [0 -1])
+      :player-right (player-action next-state [0 1])
+      :player-up (player-action next-state [-1 0])
+      :player-down (player-action next-state [1 0])
+      :player-wait (player-action next-state [0 0]))))

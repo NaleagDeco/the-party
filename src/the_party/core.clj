@@ -1,4 +1,5 @@
 (ns the-party.core
+  (:require [clojure.string])
   (:require [clojure.pprint :refer [cl-format]])
   (:require [clojure.core.async :as async :refer [<!]])
   (:require [the-party.game-state :as gs])
@@ -56,9 +57,8 @@
                (state :turns))))
 
 (defn render-status [term state]
-  (let [msg (state :status)]
-    (s/put-string term 0 23 (format-stats state))
-    (s/put-string term 0 24 msg)))
+  (s/put-string term 0 23 (format-stats state))
+  (s/put-string term 0 24 (clojure.string/join " " (state :status))))
 
 (defn render [term state]
   (s/clear term)
