@@ -28,34 +28,50 @@
 (defn neighbourhood [coord]
   (map (partial map + coord) directions))
 
+(defn adjacent-to-player? [state coord]
+  (boolean (some #{(state :player-coords)} (neighbourhood coord))))
+
+(defn converse [belligerent target]
+  (let [t-comp (target :composure)
+        t-stam (target :stamina)
+        b-conf (belligerent :confidence)
+        missed (= 1 (rand-int 2))
+        damage (ceil (* (/ 100 (+ 100 t-comp)) b-conf))]
+    (if missed
+      target
+      (assoc target :stamina (- t-stam damage)))))
+
 (defn guest-move [state other-guests accum old-coords guest]
   (let [terrain (state :terrain)
         tentative-coords (map + (rand-nth directions) old-coords)
         new-coords (if (or (inaccessible? (terrain tentative-coords))
                            (contains? other-guests tentative-coords)
-                           (contains? accum tentative-coords))
+                           (contains? accum tentative-coords)
+                           (= (state :player-coords) tentative-coords))
                      old-coords
                      tentative-coords)]
     [new-coords guest]))
 
-(defn guest-converse [state other-guests accum coords guest]
-  [coords guest])
-
-(defn guest-action [state other-guests accum coords guest]
-  (let [near-player (some #{(state :player-coords)} (neighbourhood coords))]
-    (if near-player
-      (guest-converse state other-guests accum coords guest)
-      (guest-move state other-guests accum coords guest))))
-
 (defn guest-actions [state]
-  (loop [guests (state :people)
-         accum {}]
-    (if (empty? guests)
-      (assoc state :people accum)
-      (let [[old-coords guest] (first guests)
-            other-guests (dissoc guests old-coords)
-            [new-coords new-guest] (guest-action state guests accum old-coords guest)]
-        (recur other-guests (assoc accum new-coords new-guest))))))
+  (let [conversing-guests (select-keys (state :people)
+                                       (filter
+                                        (partial adjacent-to-player? state)
+                                        (-> :people state keys)))
+        moving-guests (select-keys (state :people)
+                                   (filter
+                                    (partial
+                                     (complement adjacent-to-player?) state)
+                                    (-> :people state keys)))
+        conversing-player (reduce #(converse %2 %1) (state :player)
+                                  (vals conversing-guests))]
+    (loop [guests moving-guests
+           accum conversing-guests]
+      (if (empty? guests)
+        (assoc state :people accum :player conversing-player)
+        (let [[old-coords guest] (-> guests seq first)
+              other-guests (dissoc guests old-coords)
+              [new-coords new-guest] (guest-move state guests accum old-coords guest)]
+          (recur other-guests (assoc accum new-coords new-guest)))))))
 
 (defn turn-tick [state]
   (assoc state :turns (-> :turns state inc)))
@@ -72,20 +88,10 @@
     (if blocked
       (status-msg state "You bump your nose into a wall.")
       (-> state
-        (move-to new-coords)
         guest-actions
+        (move-to new-coords)
         (status-msg "")
         turn-tick))))
-
-(defn converse [belligerent target]
-  (let [t-comp (target :composure)
-        t-stam (target :stamina)
-        b-conf (belligerent :confidence)
-        missed (= 1 (rand-int 2))
-        damage (ceil (* (/ 100 (+ 100 t-comp)) b-conf))]
-    (if missed
-      target
-      (assoc target :stamina (- t-stam damage)))))
 
 (defn player-converse [state target-coords]
   (let [guests (state :people)
@@ -94,7 +100,7 @@
         new-guests (if (>= (target :stamina) 0)
                      (assoc other-guests target-coords target)
                      other-guests)
-        msg (if (>= (target :stamina) 0) "You talk about stuff." "The converation peters out.")]
+        msg (if (>= (target :stamina) 0) "You talk about stuff." "The conversation peters out.")]
     (-> (assoc state :people new-guests)
       guest-actions
       (status-msg msg)
@@ -112,4 +118,5 @@
     :player-left (player-action state [0 -1])
     :player-right (player-action state [0 1])
     :player-up (player-action state [-1 0])
-    :player-down (player-action state [1 0])))
+    :player-down (player-action state [1 0])
+    :player-wait (player-action state [0 0])))

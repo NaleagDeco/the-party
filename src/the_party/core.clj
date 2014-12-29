@@ -17,6 +17,7 @@
       \j (r/deliver input :player-down)
       \k (r/deliver input :player-up)
       \l (r/deliver input :player-right)
+      \. (r/deliver input :player-wait)
       nil)
     char))
 
