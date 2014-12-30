@@ -62,12 +62,18 @@
                                     (partial
                                      (complement adjacent-to-player?) state)
                                     (-> :people state keys)))
-        conversing-player (reduce #(converse %2 %1) (state :player)
-                                  (vals conversing-guests))]
+        conversing-player (reduce
+                           #(list (converse %2 (first %1))
+                                  (conj (second %1) "Someone talked to you!"))
+                           (list (state :player) (state :status))
+                           (vals conversing-guests))]
     (loop [guests moving-guests
            accum conversing-guests]
       (if (empty? guests)
-        (assoc state :people accum :player conversing-player)
+        (assoc state
+               :people accum
+               :player (first conversing-player)
+               :status (second conversing-player))
         (let [[old-coords guest] (-> guests seq first)
               other-guests (dissoc guests old-coords)
               [new-coords new-guest] (guest-move state guests accum old-coords guest)]
@@ -102,7 +108,7 @@
         new-guests (if (>= (target :stamina) 0)
                      (assoc other-guests target-coords target)
                      other-guests)
-        msg (if (>= (target :stamina) 0) "You talk about stuff." "The conversation peters out.")]
+        msg (if (>= (target :stamina) 0) "You start a conversation." "The conversation peters out.")]
     (-> (assoc state :people new-guests)
       guest-actions
       (append-status msg)
