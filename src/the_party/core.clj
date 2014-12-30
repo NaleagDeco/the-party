@@ -14,11 +14,11 @@
 (defn process-input! [char]
   (do
     (case char
-      \h (r/deliver input :player-left)
-      \j (r/deliver input :player-down)
-      \k (r/deliver input :player-up)
-      \l (r/deliver input :player-right)
-      \. (r/deliver input :player-wait)
+      (\h :left) (r/deliver input :player-left)
+      (\j :down) (r/deliver input :player-down)
+      (\k :up) (r/deliver input :player-up)
+      (\l :right) (r/deliver input :player-right)
+      (\.) (r/deliver input :player-wait)
       nil)
     char))
 
@@ -41,7 +41,7 @@
 (defn render-player [term state]
   (let [[r c] (state :player-coords)]
     ; lanterna uses x y coords but we use row column
-    (s/put-string term c r "@")))
+    (s/put-string term c r "@" {:fg :red :styles #{:bold}})))
 
 (defn render-people [term state]
   (let [people (state :people)]
