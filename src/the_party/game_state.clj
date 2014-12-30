@@ -19,7 +19,7 @@
      :terrain terrain
      :people (builder/generate-people terrain 20)
      :player-coords player-coords
-     :status "Welcome to The Party!"
+     :status '("Welcome to The Party!")
      :turns 0}))
 
 (defn guest-present? [state coord]
@@ -108,7 +108,7 @@
         new-guests (if (>= (target :stamina) 0)
                      (assoc other-guests target-coords target)
                      other-guests)
-        msg (if (>= (target :stamina) 0) "You start a conversation." "The conversation peters out.")]
+        msg (if (>= (target :stamina) 0) "You chat a bit with someone." "The conversation peters out.")]
     (-> (assoc state :people new-guests)
       guest-actions
       (append-status msg)
