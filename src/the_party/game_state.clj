@@ -13,8 +13,9 @@
   (not-any? #(= tile %) '(:empty-space :passage :open-door)))
 
 (defn create [player]
-  (let [terrain (builder/file->terrain (io/resource "map.txt"))
-        player-coords (-> terrain builder/empty rand-nth)]
+  (let [terrain (builder/populate-ladders
+                 (builder/file->terrain (io/resource "map.txt")))
+        player-coords (ffirst (filter #(= (second %) :up-ladder) terrain))]
     {:player player
      :terrain terrain
      :people (builder/generate-people terrain 20)

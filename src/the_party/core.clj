@@ -36,7 +36,9 @@
     :open-door "+"
     :passage "#"
     :empty-space "."
-    :inaccessible " "))
+    :inaccessible " "
+    :up-ladder "/"
+    :down-ladder "\\"))
 
 (defn render-player [term state]
   (let [[r c] (state :player-coords)]

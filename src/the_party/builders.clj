@@ -32,3 +32,9 @@
 (defn generate-people [terrain num]
   (let [selections  (->> terrain empty shuffle (take num))]
     (zipmap selections (repeatedly #(people/bro)))))
+
+(defn populate-ladders [terrain]
+  (let [selections (->> terrain empty shuffle (take 2))]
+    (-> terrain
+        (assoc (first selections) :up-ladder)
+        (assoc (second selections) :down-ladder))))
