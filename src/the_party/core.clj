@@ -59,8 +59,8 @@
                (state :turns))))
 
 (defn render-status [term state]
-  (s/put-string term 0 23 (format-stats state))
-  (s/put-string term 0 24 (clojure.string/join " " (state :status))))
+  (s/put-string term 0 26 (format-stats state))
+  (s/put-string term 0 27 (clojure.string/join " " (state :status))))
 
 (defn render [term state]
   (s/clear term)
