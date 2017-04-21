@@ -13,7 +13,14 @@
 
 (defn leaf? [node]
   (and (nil? (:left node)) (nil? (:right node))))
-()
+
+(defn heads? [num]
+  (< 50 num))
+
+(defn tails? [num]
+  (>= 50 num))
+
+
 (defn split-node
   ([node] (split-node node 0))
   ([node height]
@@ -34,8 +41,7 @@
              (assoc :left (split-node left (+ height 1)))
              (assoc :right (split-node right (+ height 1)))))))))
 
-(defn heads? [num]
-  (< 50 num))
-
-(defn tails? [num]
-  (>= 50 num))
+(defn leafs [tree]
+  (if (leaf? tree)
+    [tree]
+    [(leafs (:left tree)) (leafs (:right tree))]))

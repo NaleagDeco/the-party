@@ -1,7 +1,8 @@
 (ns the-party.builders
   (:refer-clojure :exclude [empty])
-  (:require [clojure.java.io :as io])
-  (:require [the-party.people :as people]))
+  (:require [clojure.java.io :as io]
+            [the-party.people :as people]
+            [the-party.dng :as dng]))
 
 (defn char->tile [char]
   (case char
@@ -27,7 +28,24 @@
                                (map char->tile (first line)))))))))
 
 (defn tree->terrain []
-  (into {} (map (fn [k] {k :inaccessible}) (for [r (range 25) c (range 80)] (vector r c)))))
+  (let [leafs (flatten (dng/leafs (dng/split-node dng/seed)))
+        empty-map
+        (into {} (map (fn [k] {k :inaccessible}) (for [r (range 25) c (range 80)] (vector r c))))]
+    (loop [l leafs
+           floor empty-map]
+      (if (empty? l)
+        floor
+        (let [leaf (first l)
+              topwall (for [r (list (:starty leaf)) c (range (:startx leaf) (+ (:stopx leaf) 1))] (vector r c))
+              bottomwall (for [r (list (:stopy leaf)) c (range (:startx leaf) (+ (:stopx leaf) 1))] (vector r c))
+              leftwall (for [c (list (:startx leaf)) r (range (:starty leaf) (+ (:stopy leaf) 1))] (vector r c))
+              rightwall (for [c (list (:stopx leaf)) r (range (:starty leaf) (+ (:stopy leaf) 1))] (vector r c))
+              floort (reduce #(assoc %1 %2 :horizontal-wall) floor topwall)
+              floorb (reduce #(assoc %1 %2 :horizontal-wall) floort bottomwall)
+              floorl (reduce #(assoc %1 %2 :vertical-wall) floorb leftwall)
+              floorr (reduce #(assoc %1 %2 :vertical-wall) floorl rightwall)]
+          (recur (rest l)
+                 floorr))))))
 
 (defn empty [terrain]
   (map first (filter #(= (second %) :empty-space) terrain)))
