@@ -13,13 +13,13 @@
   (not-any? #(= tile %) '(:empty-space :passage :open-door)))
 
 (defn create [player]
-  (let [terrain (builder/populate-ladders
-                 (builder/file->terrain (io/resource "map.txt")))
+  (let [terrain (builder/tree->terrain) #_ (builder/populate-ladders
+                 (builder/tree->terrain))
         player-coords (ffirst (filter #(= (second %) :up-ladder) terrain))]
     {:player player
      :terrain terrain
-     :people (builder/generate-people terrain 20)
-     :player-coords player-coords
+     :people [] #_(builder/generate-people terrain 20)
+     :player-coords [0 0] #_player-coords
      :status '("Welcome to The Party!")
      :turns 0}))
 

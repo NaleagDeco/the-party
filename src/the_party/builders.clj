@@ -26,6 +26,9 @@
                                     (-> line first count range))
                                (map char->tile (first line)))))))))
 
+(defn tree->terrain []
+  (into {} (map (fn [k] {k :inaccessible}) (for [r (range 25) c (range 80)] (vector r c)))))
+
 (defn empty [terrain]
   (map first (filter #(= (second %) :empty-space) terrain)))
 
