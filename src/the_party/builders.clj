@@ -28,7 +28,8 @@
                                (map char->tile (first line)))))))))
 
 (defn tree->terrain []
-  (let [leafs (flatten (dng/leafs (dng/split-node dng/seed)))
+  (let [tree (dng/whittle-tree (dng/split-node dng/seed))
+        leafs (flatten (dng/leafs tree))
         empty-map
         (into {} (map (fn [k] {k :inaccessible}) (for [r (range 25) c (range 80)] (vector r c))))]
     (loop [l leafs

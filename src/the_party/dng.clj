@@ -48,6 +48,13 @@
                 (assoc :left (split-node left))
                 (assoc :right (split-node right)))))))))
 
+(defn whittle-tree [tree]
+  (if (and (nil? (:left tree)) (nil? (:right tree)))
+    tree
+    (-> tree
+        (assoc :left (whittle-tree (:left tree)))
+        (assoc :right (whittle-tree (:right tree))))))
+
 (defn leafs [tree]
   (if (leaf? tree)
     [tree]
