@@ -50,7 +50,12 @@
 
 (defn whittle-tree [tree]
   (if (and (nil? (:left tree)) (nil? (:right tree)))
-    tree
+    (let [dice (rand-int 100)]
+      (if (< dice 25)
+        tree
+        (-> tree
+            (update :stopy (fn [x] (int (* x (/ 3 4)))))
+            (update :stopx (fn [x] (int (* x (/ 3 4))))))))
     (-> tree
         (assoc :left (whittle-tree (:left tree)))
         (assoc :right (whittle-tree (:right tree))))))
