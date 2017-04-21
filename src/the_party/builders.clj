@@ -40,12 +40,14 @@
               bottomwall (for [r (list (:stopy leaf)) c (range (:startx leaf) (+ (:stopx leaf) 1))] (vector r c))
               leftwall (for [c (list (:startx leaf)) r (range (:starty leaf) (+ (:stopy leaf) 1))] (vector r c))
               rightwall (for [c (list (:stopx leaf)) r (range (:starty leaf) (+ (:stopy leaf) 1))] (vector r c))
+              innards (for [r (range (inc (:starty leaf)) (:stopy leaf)) c (range (inc (:startx leaf)) (:stopx leaf))] (vector r c))
               floort (reduce #(assoc %1 %2 :horizontal-wall) floor topwall)
               floorb (reduce #(assoc %1 %2 :horizontal-wall) floort bottomwall)
               floorl (reduce #(assoc %1 %2 :vertical-wall) floorb leftwall)
-              floorr (reduce #(assoc %1 %2 :vertical-wall) floorl rightwall)]
+              floorr (reduce #(assoc %1 %2 :vertical-wall) floorl rightwall)
+              floorf (reduce #(assoc %1 %2 :empty-space) floorr innards)]
           (recur (rest l)
-                 floorr))))))
+                 floorf))))))
 
 (defn empty [terrain]
   (map first (filter #(= (second %) :empty-space) terrain)))
