@@ -1,7 +1,6 @@
 (ns the-party.dng
   (:require [clojure.math.numeric-tower :as math]))
 
-(def MAX_SPLITS 1)
 (def MIN_ROOM_SIZE 4)
 
 (def seed {:startx 0
@@ -22,24 +21,32 @@
 
 
 (defn split-node
-  ([node] (split-node node 0))
-  ([node height]
-   (if (> height MAX_SPLITS)
-     node
-     (let [splitfn (fn [start stop]
-                     (loop [split-at start]
-                       (if (or (< (math/abs (- split-at start)) 3) (< (math/abs (- (+ split-at 1) stop)) 3))
-                         (recur (+ start (rand-int (- stop start))))
-                         split-at)))
-           dice (rand-int 100)
-           mode (if (heads? dice) :vertical :horizontal)
-           [start stop] (if (= mode :vertical) [:starty :stopy] [:startx :stopx])
-           split-at (splitfn (start node) (stop node))]
-       (let [left (assoc node stop split-at)
-             right (assoc node start (+ split-at 1))]
-         (-> node
-             (assoc :left (split-node left (+ height 1)))
-             (assoc :right (split-node right (+ height 1)))))))))
+  [node]
+  (let [splitfn (fn [start stop]
+                  (loop [split-at start
+                         rounds 0]
+                    (cond (> rounds 3) nil
+                          (or (< (math/abs (- split-at start)) MIN_ROOM_SIZE) (< (math/abs (- (+ split-at 1) stop)) MIN_ROOM_SIZE))
+                          (recur (+ start (rand-int (- stop start)))
+                                 (inc rounds))
+                          :else split-at)))
+        smallx? (< (math/abs (- (:stopx node) (:startx node))) MIN_ROOM_SIZE)
+        smally? (< (math/abs (- (:stopy node) (:startx node))) MIN_ROOM_SIZE)
+        mode (cond (and smallx? smally?) :dead
+                   smallx? :vertical
+                   smally? :horizontal
+                   :else (if (heads? (rand-int 100)) :vertical :horizontal))]
+    (if (= mode :done)
+      nil
+      (let [[start stop] (if (= mode :vertical) [:starty :stopy] [:startx :stopx])
+            split-at (splitfn (start node) (stop node))]
+        (if (nil? split-at)
+          node
+          (let [left (assoc node stop split-at)
+                right (assoc node start (+ split-at 1))]
+            (-> node
+                (assoc :left (split-node left))
+                (assoc :right (split-node right)))))))))
 
 (defn leafs [tree]
   (if (leaf? tree)
